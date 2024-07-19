@@ -12,6 +12,9 @@ module.exports = {
         'color-accent': '#3B82F6', 
         'color-accent-dark': '#1E40AF', 
       },
+      animation: {
+        bounce: 'bounce 1s infinite',
+      },
     },
   },
   plugins: [],
