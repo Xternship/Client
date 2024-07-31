@@ -1,7 +1,11 @@
+// SignUp.tsx
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/firebaseConfig';
+import axios from 'axios';
 
 interface SignUpFormInputs {
   username: string;
@@ -19,6 +23,8 @@ const schema = yup.object().shape({
   role: yup.string().required('Role is required'),
 });
 
+const roles = ["Admins", "Evaluators", "Mentors", "Interns", "Management"];
+
 const SignUp: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -32,17 +38,17 @@ const SignUp: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      // Call the backend API to register the user
-      const response = await fetch('/api/user/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      const password = Math.random().toString(36).slice(-8);
+
+      await createUserWithEmailAndPassword(auth, data.email, password);
+
+      await axios.post('https://localhost:7161/v1/emails', {
+        email: data.email,
+        username: data.username,
+        password,
       });
-      if (response.ok) {
-        setSuccess('User registered successfully! Check email for login credentials.');
-      } else {
-        throw new Error('Failed to register user.');
-      }
+      
+      setSuccess('User registered successfully! Check email for login credentials.');
     } catch (error) {
       setError((error as Error).message);
     }
@@ -98,11 +104,15 @@ const SignUp: React.FC = () => {
           {/* Role */}
           <div className="mb-4">
             <label className="block mb-2 text-sm font-medium text-gray-700">Role</label>
-            <input
-              type="text"
+            <select
               {...register('role')}
               className={`w-full p-3 border ${errors.role ? 'border-red-500' : 'border-gray-300'} rounded focus:outline-none focus:border-blue-500`}
-            />
+            >
+              <option value="">Select a role</option>
+              {roles.map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
             {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
           </div>
           <button
@@ -110,7 +120,7 @@ const SignUp: React.FC = () => {
             disabled={!isValid || isSubmitting}
             className={`w-full p-3 text-white rounded ${!isValid || isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-color-accent hover:bg-color-accent-dark'}`}
             style={{ backgroundColor: isValid && !isSubmitting ? '#3B82F6' : '#A0AEC0' }}
-            >
+          >
             {isSubmitting ? 'Submitting...' : 'Sign Up'}
           </button>
         </form>

@@ -6,7 +6,7 @@ import LandingPage from './components/LandingPage';
 import ProfileDisplay from './profile/ProfileDisplay'; 
 import ProfileEdit from './profile/ProfileEdit';
 import ProfilePage from './profile/ProfilePage';
-
+import WelcomePage from './components/welcomePage';
 const mockProfile = {
   name: 'John Doe',
   university: 'University A',
@@ -38,6 +38,8 @@ const App: React.FC = () => {
           element={<ProfileEdit initialProfile={mockProfile} onSave={handleSave} />} 
         />
         <Route path="/profile" element={<ProfilePage />} />
+
+        <Route path="/welcome"  element={<WelcomePage />} />
       </Routes>
     </Router>
   );

@@ -34,6 +34,7 @@ const Login: React.FC = () => {
       setServerError((error as Error).message);
     }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-color-primary">
