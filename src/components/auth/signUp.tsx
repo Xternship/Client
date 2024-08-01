@@ -7,6 +7,8 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
 import axios from 'axios';
 
+
+
 interface SignUpFormInputs {
   username: string;
   email: string;
@@ -41,6 +43,15 @@ const SignUp: React.FC = () => {
       const password = Math.random().toString(36).slice(-8);
 
       await createUserWithEmailAndPassword(auth, data.email, password);
+
+      await axios.post('https://localhost:7162/v1/users/register', {
+        username: data.username,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role,
+        password
+      });
 
       await axios.post('https://localhost:7161/v1/emails', {
         email: data.email,
