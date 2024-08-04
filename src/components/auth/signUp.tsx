@@ -1,4 +1,3 @@
-// SignUp.tsx
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -6,8 +5,6 @@ import * as yup from 'yup';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
 import axios from 'axios';
-
-
 
 interface SignUpFormInputs {
   username: string;
@@ -25,7 +22,7 @@ const schema = yup.object().shape({
   role: yup.string().required('Role is required'),
 });
 
-const roles = ["Admins", "Evaluators", "Mentors", "Interns", "Management"];
+const roles = ["Admin", "Evaluator", "Mentor", "Intern", "Management"];
 
 const SignUp: React.FC = () => {
   const [error, setError] = useState('');
@@ -41,26 +38,40 @@ const SignUp: React.FC = () => {
     setSuccess('');
     try {
       const password = Math.random().toString(36).slice(-8);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, password);
+      const user = userCredential.user;
 
-      await createUserWithEmailAndPassword(auth, data.email, password);
+     
+      const token = await user.getIdToken();
+      console.log("Firebase ID Token:", token); 
 
+      localStorage.setItem('firebaseToken', token);
+
+    
       await axios.post('https://localhost:7162/v1/users/register', {
         username: data.username,
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
         role: data.role,
-        password
+        password,
+        firebasetoken: token 
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}` 
+        }
       });
 
+   
       await axios.post('https://localhost:7161/v1/emails', {
         email: data.email,
         username: data.username,
         password,
       });
-      
+
       setSuccess('User registered successfully! Check email for login credentials.');
     } catch (error) {
+      console.error("Error during sign up:", error); // Debug log
       setError((error as Error).message);
     }
   };

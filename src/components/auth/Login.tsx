@@ -4,7 +4,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '@/firebaseConfig';
+import { auth } from '@/firebaseConfig';  
+import axios from 'axios';
 
 interface IFormInput {
   email: string;
@@ -20,7 +21,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors, isValid } } = useForm<IFormInput>({
     resolver: yupResolver(schema),
-    mode: 'onChange'  
+    mode: 'onChange'
   });
   const [serverError, setServerError] = useState('');
 
@@ -29,7 +30,39 @@ const Login: React.FC = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
-      navigate('/welcome', { state: { name: user.displayName, email: user.email } });
+      const token = await user.getIdToken();
+  
+      const response = await axios.post('https://localhost:7162/v1/users/login', {
+        email: data.email,
+        firebasetoken: token
+      });
+  
+      if (response.data.success) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('role', response.data.role);
+  
+        switch (response.data.role) {
+          case 'Admin':
+            navigate('/admin');
+            break;
+          case 'Evaluator':
+            navigate('/evaluator');
+            break;
+          case 'Mentor':
+            navigate('/mentor');
+            break;
+          case 'Intern':
+            navigate('/intern');
+            break;
+          case 'Management':
+            navigate('/management');
+            break;
+          default:
+            navigate('/welcome');
+        }
+      } else {
+        setServerError(response.data.message);
+      }
     } catch (error) {
       setServerError((error as Error).message);
     }
@@ -65,7 +98,7 @@ const Login: React.FC = () => {
           <button
             type="submit"
             className={`w-full p-3 text-white rounded ${isValid ? 'bg-color-accent hover:bg-color-accent-dark' : 'bg-gray-400 cursor-not-allowed'}`}
-            style={{ backgroundColor: isValid ? '#3B82F6' : 'bg-gray-400' }}
+            style={{ backgroundColor: isValid ? '#3B82F6' : '#A0AEC0' }}
             disabled={!isValid}
           >
             Log in
